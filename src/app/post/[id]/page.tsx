@@ -9,7 +9,6 @@ import Image from "next/image";
 
 const Post = () => {
   const { id } = useParams();
-  console.log(id);
   const [post , setPost] = useState<PostType>();
   const [isLoading, setIsLoading] = useState(true);
 
