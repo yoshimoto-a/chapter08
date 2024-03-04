@@ -1,9 +1,9 @@
 "use client";
 
 /*言語のカテゴリー*/
-import "../app/globals.css";
+import "../globals.css";
 import React from "react";
-import type { Post } from "@/typees/Post";
+import type { Post } from "@/app/_types/Post";
 
 interface CategoriesProps {
   categories: Post["categories"];

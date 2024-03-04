@@ -1,6 +1,6 @@
 "use client";
 
-import { useContactForm } from "@/components/useContactForm";
+import { useContactForm } from "./_hooks/useContactForm";
 
 const Contact: React.FC = () => {
   const {

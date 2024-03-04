@@ -2,10 +2,10 @@
 
 import "./globals.css";
 import { useState, useEffect } from "react";
-import { Categories } from "@/components/Categories";
+import { Categories } from "@/app/_components/Categories";
 import dayjs from "dayjs";
 import Link from "next/link";
-import type { Post } from "@/typees/Post";
+import type { Post } from "@/app/_types/Post";
 
 const BlogItem: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);

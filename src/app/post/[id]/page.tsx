@@ -2,8 +2,8 @@
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from "react";
-import { Categories } from "@/components/Categories";
-import type { Post as PostType } from "@/typees/Post";
+import { Categories } from "@/app/_components/Categories";
+import type { Post as PostType } from "@/app/_types/Post";
 import dayjs from "dayjs";
 import Image from "next/image";
 
