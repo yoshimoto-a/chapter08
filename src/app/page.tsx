@@ -5,20 +5,25 @@ import { useState, useEffect } from "react";
 import { Categories } from "@/app/_components/Categories";
 import dayjs from "dayjs";
 import Link from "next/link";
-import type { Post } from "@/app/_types/Post";
+import type { MicroCmsPost } from "./_types/MicroCmsPost";
 
 const BlogItem: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetcher = async (): Promise<void> => {
       setIsLoading(true);
       const resp = await fetch(
-        "https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts"
+        "https://reoh07vbzw.microcms.io/api/v1/posts",{
+          headers: {
+            'X-MICROCMS-API-KEY': 'hIKXpa6yuQEnAGIDI12BL0cs0SPUBEeMTiPe',
+          }
+        }
       );
-      const data = await resp.json();
-      setPosts(data.posts);
+      const {contents} = await resp.json();
+      console.log(contents);
+      setPosts(contents);
       setIsLoading(false);
     };
     fetcher();
