@@ -25,6 +25,7 @@ const Post = () => {
       );
       const data = await resp.json();
       setPost(data);
+      setPost(data);
       setIsLoading(false);
     };
     fetcher();
@@ -32,7 +33,7 @@ const Post = () => {
 
   if (isLoading) return <div>読み込み中...</div>;
   if (!post) return <div>記事がありません</div>;
-console.log(post);
+  
   return (
     <>
       <div className="mx-auto max-w-800px">
