@@ -16,20 +16,11 @@ const BlogItem: React.FC = () => {
       const resp = await fetch(
         "https://reoh07vbzw.microcms.io/api/v1/posts",{
           headers: {
-<<<<<<< HEAD
             'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KEY as string,
           }
         }
       );
       const { contents } = await resp.json();
-=======
-            'X-MICROCMS-API-KEY': 'hIKXpa6yuQEnAGIDI12BL0cs0SPUBEeMTiPe',
-          }
-        }
-      );
-      const {contents} = await resp.json();
-      console.log(contents);
->>>>>>> a4f3fe7f35dabc5fd211d2655a2fd781e7918935
       setPosts(contents);
       setIsLoading(false);
     };
