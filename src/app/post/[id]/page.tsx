@@ -1,39 +1,20 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from "react";
 import { Categories } from "@/app/_components/Categories";
-import type { MicroCmsPost } from '@/app/_types/MicroCmsPost';
 import dayjs from "dayjs";
 import Image from "next/image";
+import { MicroCmsPost } from '@/app/_types/MicroCmsPost';
+import { useApi } from '@/app/_hooks/useApi';
 
 const Post = () => {
   const { id } = useParams();
-  const [post , setPost] = useState<MicroCmsPost>();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetcher = async () => {
-      setIsLoading(true);
-      const resp = await fetch(
-        `https://reoh07vbzw.microcms.io/api/v1/posts/${id}`,
-        {
-          headers: {
-            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KEY as string,
-          }
-        }
-      );
-      const data = await resp.json();
-      setPost(data);
-      setPost(data);
-      setIsLoading(false);
-    };
-    fetcher();
-  }, [id]);
+  const { data, isLoading } = useApi(`https://reoh07vbzw.microcms.io/api/v1/posts/${id}`);
 
   if (isLoading) return <div>読み込み中...</div>;
-  if (!post) return <div>記事がありません</div>;
-  
+  if (!data) return <div>記事がありません</div>;
+  const post:  MicroCmsPost = data;
+
   return (
     <>
       <div className="mx-auto max-w-800px">
