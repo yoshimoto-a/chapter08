@@ -5,20 +5,23 @@ import { useState, useEffect } from "react";
 import { Categories } from "@/app/_components/Categories";
 import dayjs from "dayjs";
 import Link from "next/link";
-import type { Post } from "@/app/_types/Post";
+import type { MicroCmsPost } from "./_types/MicroCmsPost";
 
 const BlogItem: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<MicroCmsPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const fetcher = async (): Promise<void> => {
       setIsLoading(true);
       const resp = await fetch(
-        "https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts"
+        "https://reoh07vbzw.microcms.io/api/v1/posts",{
+          headers: {
+            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KEY as string,
+          }
+        }
       );
-      const data = await resp.json();
-      setPosts(data.posts);
+      const { contents } = await resp.json();
+      setPosts(contents);
       setIsLoading(false);
     };
     fetcher();
@@ -26,7 +29,7 @@ const BlogItem: React.FC = () => {
 
   if (isLoading) return <div>読み込み中...</div>;
   if (!posts) return <div>記事がありません</div>;
-
+  console.log(posts);
   return (
     <>
       <div className="mx-auto max-w-screen-lg px-4 my-10">
