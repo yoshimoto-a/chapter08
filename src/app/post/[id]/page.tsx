@@ -1,39 +1,26 @@
 "use client";
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect } from "react";
 import { Categories } from "@/app/_components/Categories";
-import type { Post as PostType } from "@/app/_types/Post";
 import dayjs from "dayjs";
 import Image from "next/image";
+import { MicroCmsPost } from '@/app/_types/MicroCmsPost';
+import { useApi } from '@/app/_hooks/useApi';
 
 const Post = () => {
   const { id } = useParams();
-  const [post , setPost] = useState<PostType>();
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetcher = async () => {
-      setIsLoading(true);
-      const resp = await fetch(
-        `https://1hmfpsvto6.execute-api.ap-northeast-1.amazonaws.com/dev/posts/${id}`
-      );
-      const data = await resp.json();
-      setPost(data.post);
-      setIsLoading(false);
-    };
-    fetcher();
-  }, [id]);
+  const { data, isLoading } = useApi(`https://reoh07vbzw.microcms.io/api/v1/posts/${id}`);
 
   if (isLoading) return <div>読み込み中...</div>;
-  if (!post) return <div>記事がありません</div>;
+  if (!data) return <div>記事がありません</div>;
+  const post:  MicroCmsPost = data;
 
   return (
     <>
       <div className="mx-auto max-w-800px">
         <div className="flex flex-col p-4">
           <Image
-            src={"https://placehold.jp/800x400.png"}
+            src={post.thumbnail.url}
             alt={""}
             width={"800"}
             height={"400"}
