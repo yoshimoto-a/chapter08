@@ -17,8 +17,8 @@ export const useApi = (url:string) => {
       const data = await resp.json();
       setData(data);
       setLoading(false);
-      }
-      fetcher();
-    }, [url]);
-return { data,isLoading}
+    }
+    fetcher();
+  }, [url]);
+  return { data,isLoading}
 }
