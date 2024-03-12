@@ -1,24 +1,26 @@
 "use client";
+import { JsonObject } from "@prisma/client/runtime/library";
 import { useState, useEffect } from "react";
 
-export const useApi = (url:string) => {
-  const [data, setData] = useState();
+export const useApi = (url: string, body: JsonObject) => {
+  const [data, setData] = useState<any>();
   const [isLoading, setLoading] = useState(true)
   useEffect(() => {
-    const fetcher = async () => {
-      setLoading(true);
-      const resp = await fetch(url,
-        {
-          headers: {
-            'X-MICROCMS-API-KEY': process.env.NEXT_PUBLIC_MICROCMS_API_KEY as string,
-          }
-        }
-      );
-      const data = await resp.json();
-      setData(data);
-      setLoading(false);
+    try {
+      const fetcher = async () => {
+        setLoading(true);
+        const resp = body 
+          ? await fetch(url, body)
+          : await fetch(url);
+        const data = await resp.json();
+        setData(data);
+        setLoading(false);
+      }
+      fetcher();
+    }catch(e) {
+      if( e instanceof Error) {
+        console.log(e.message);      }
     }
-    fetcher();
   }, [url]);
-  return { data,isLoading}
+  return {data, isLoading}
 }
