@@ -13,12 +13,12 @@ const NewPost: React.FC = () => {
     onSubmit,
     formState: { isSubmitting },
   } = useNewPost(url);
-  
-  const categoriesUrl = "/api/admin/categories"
-  const {data , isLoading} = useApi(categoriesUrl,{ method:"GET" });
+
+  const categoriesUrl = "/api/admin/categories";
+  const { data, isLoading } = useApi(categoriesUrl, { method: "GET" });
 
   if (isLoading) return <div>読み込み中...</div>;
-  const { data : name } : { data: Category[] } = data;
+  const { data: name }: { data: Category[] } = data;
 
   return (
     <div className="max-w-[800px] mx-auto py-10">
@@ -69,12 +69,27 @@ const NewPost: React.FC = () => {
             {...register("categories")}
           >
             {name.map(item => (
-              <option key={item.id} value={JSON.stringify({ id: item.id, name: item.name })}>{item.name}</option>
+              <option
+                key={item.id}
+                value={JSON.stringify({ id: item.id, name: item.name })}
+              >
+                {item.name}
+              </option>
             ))}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
         </div>
@@ -87,6 +102,6 @@ const NewPost: React.FC = () => {
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
 export default NewPost;

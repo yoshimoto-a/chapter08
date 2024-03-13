@@ -1,50 +1,124 @@
 /*管理者編集ページ */
 "use client";
 
-import { useApi } from "@/app/_hooks/useApi";
-import { useParams } from 'next/navigation';
-import { usePutPost } from './_hooks/usePutPost';
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import type { Post as PostType } from "@/app/_types/Post";
+import { useState, useEffect } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
-import { Post as PostType } from "@/app/_types/Post";
-import { useDeletePost } from "./_hooks/useDeletePost";
+import { Categories } from "@/app/_components/Categories";
 
-  const PutPost: React.FC = () => {
+interface Inputs {
+  title: string;
+  content: string;
+  thumbnailUrl: string;
+  categories: Category[];
+}
+
+const PutPost: React.FC = () => {
   const { id } = useParams();
   const url = `/api/posts/${id}`;
-  const endPoint = `/api/admin/posts/[id]`
+  const endPoint = `/api/admin/posts/[id]`;
+  const router = useRouter();
+  const [isLoading, setLoading] = useState(true);
+  const [post, setPost] = useState<PostType | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [category, setCategory] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetcher = async () => {
+      setLoading(true);
+      const resp = await fetch(url, { method: "GET" });
+      const data = await resp.json();
+      setPost(data.post);
+
+      const categoryResp = await fetch("/api/admin/categories", {
+        method: "GET",
+      });
+      const categoryData = await categoryResp.json();
+      setCategory(categoryData.data);
+
+      setLoading(false);
+    };
+    fetcher();
+  }, []);
+
+  useEffect(() => {
+    if (post) {
+      reset({
+        title: post.title,
+        content: post.content,
+        thumbnailUrl: post.thumbnailUrl,
+        categories: post.postCategories,
+      });
+    }
+  }, [post]);
+
   const {
     register,
     handleSubmit,
-    onSubmit,
+    reset,
     formState: { isSubmitting },
-  } = usePutPost(endPoint, Number(id));
-  
-  //ボタンを押されたら更新
-  const {isDeleting, deletePost} = useDeletePost(endPoint, Number(id));
-  //投稿内容取得
-  const {data: postData, isLoading: postLoading}= useApi(url,{method:"GET"});
-  //カテゴリー取得
-  const categoriesUrl = "/api/admin/categories"
-  const {data: categoryData, isLoading: categoryLoading} = useApi(categoriesUrl,{method:"GET"});
+  } = useForm<Inputs>({
+    defaultValues: {
+      title: "",
+      content: "",
+      thumbnailUrl: "",
+      categories: [],
+    },
+  });
 
-  if (postLoading) return <div>読み込み中...</div>;
-  if (categoryLoading) return <div>読み込み中...</div>;
+  if (isLoading || !post) return <div>読み込み中...</div>;
 
-  const { post }: { post: PostType } = postData;
-  const { data }: { data: Category[] } = categoryData;
-
-  const defaultCategories:object[] = [];
-  data.map(item => {
-    defaultCategories.push({ id: item.id.toString(), name: item.name })
-  })
-  
   const handleDeletePost = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
-    confirmDelete ? deletePost() : null
+    if (confirmDelete) return;
+    setIsDeleting(true);
+    const prams = { method: "DELETE", body: JSON.stringify(id) };
+    const data = await fetch(endPoint, prams);
+    const { status } = await data.json();
+    setIsDeleting(false);
+    if (status === 200) {
+      window.alert("削除に成功しました");
+      router.push("/admin/posts");
+    } else {
+      window.alert("削除に成功しました");
+    }
+  };
+
+  const onSubmit: SubmitHandler<Inputs> = async data => {
+    const categoryIds = data.categories.map(item => parseInt(item));
+    const prams = {
+      method: "PUT",
+      body: JSON.stringify({
+        id: parseInt(id),
+        title: data.title,
+        content: data.content,
+        thumbnailUrl: data.thumbnailUrl,
+        categoryIds: categoryIds,
+      }),
+    };
+    try {
+      const resp = await fetch("/api/admin/posts/[id]", prams);
+      const contents = await resp.json();
+      console.log(contents);
+      if (contents.status === 200) {
+        window.alert("登録に成功しました");
+        router.push("/admin/posts");
+      } else {
+        window.alert("登録に失敗しました");
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        console.log(e.message);
+        window.alert("登録に失敗しました");
+      }
+    }
   };
 
   return (
-      <div className="max-w-[800px] mx-auto py-10">
+    <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">記事編集</h1>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <label htmlFor="title" className="w-[240px]">
@@ -55,24 +129,22 @@ import { useDeletePost } from "./_hooks/useDeletePost";
             type="text"
             id="title"
             className="border border-gray-300 rounded-lg p-4 w-full mb-4"
-            defaultValue={post.title}
-            disabled={isSubmitting||isDeleting}
+            disabled={isSubmitting || isDeleting}
             {...register("title")}
           ></input>
         </div>
-          <label htmlFor="contents" className="w-[240px]">
-            内容
-          </label>
-          <div className="w-full">
-            <textarea
-              id="contents"
-              className="w-full border border-gray-300 rounded-lg p-4 mb-4"
-              defaultValue={post.content}
-              disabled={isSubmitting||isDeleting}
-              {...register("contents")}
-            ></textarea>
-          </div>
-          <label htmlFor="title" className="w-[240px]">
+        <label htmlFor="contents" className="w-[240px]">
+          内容
+        </label>
+        <div className="w-full">
+          <textarea
+            id="contents"
+            className="w-full border border-gray-300 rounded-lg p-4 mb-4"
+            disabled={isSubmitting || isDeleting}
+            {...register("content")}
+          ></textarea>
+        </div>
+        <label htmlFor="title" className="w-[240px]">
           サムネイルURL
         </label>
         <div className="w-full">
@@ -80,8 +152,7 @@ import { useDeletePost } from "./_hooks/useDeletePost";
             type="text"
             id="thumbnailUrl"
             className="border border-gray-300 rounded-lg p-4 w-full mb-4"
-            disabled={isSubmitting||isDeleting}
-            defaultValue={post.thumbnailUrl}
+            disabled={isSubmitting || isDeleting}
             {...register("thumbnailUrl")}
           ></input>
         </div>
@@ -93,39 +164,50 @@ import { useDeletePost } from "./_hooks/useDeletePost";
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
-            defaultValue={defaultCategories.toString()}
             {...register("categories")}
           >
-            {data.map(item => (
-              <option key={item.id} value={JSON.stringify({ id: item.id, name: item.name })}>{item.name}</option>
+            {category.map(item => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
             ))}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </div>
         </div>
         <div className="flex">
-        <button
-          type="submit"
-          className="bg-gray-800 text-white font-bold py-2 px-4 rounded-lg mr-4"
-          disabled={isSubmitting||isDeleting}
-        >
-          登録
-        </button>
-        <button
-          type="button"
-          className="bg-red-800 text-white font-bold py-2 px-4 rounded-lg"
-          disabled={isSubmitting||isDeleting}
-          onClick={handleDeletePost}
-        >
-          削除
-        </button>
-      </div>
+          <button
+            type="submit"
+            className="bg-gray-800 text-white font-bold py-2 px-4 rounded-lg mr-4"
+            disabled={isSubmitting || isDeleting}
+          >
+            登録
+          </button>
+          <button
+            type="button"
+            className="bg-red-800 text-white font-bold py-2 px-4 rounded-lg"
+            disabled={isSubmitting || isDeleting}
+            onClick={handleDeletePost}
+          >
+            削除
+          </button>
+        </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
 export default PutPost;
