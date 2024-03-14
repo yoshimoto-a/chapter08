@@ -34,8 +34,6 @@ export const GET = async (req: Request) => {
 
 export const PUT = async (req: Request) => {
   const body = await req.json();
-
-  console.log(body);
   const { id, title, content, categoryIds, thumbnailUrl } = body;
   try {
     const post = await prisma.post.update({
@@ -57,7 +55,6 @@ export const PUT = async (req: Request) => {
     // 記事とカテゴリーの中間テーブルのレコードをDBに生成
     // 本来複数同時生成には、createManyというメソッドがあるが、sqliteではcreateManyが使えないので、for文1つずつ実施
     for (const category of categoryIds) {
-      console.log(category);
       await prisma.postCategory.create({
         data: {
           postId: post.id,
@@ -75,7 +72,7 @@ export const PUT = async (req: Request) => {
 
 export const DELETE = async (req: Request) => {
   try {
-    const id = await req.json();
+    const { id } = await req.json();
     const deletePost = await prisma.post.delete({
       where: { id },
     });

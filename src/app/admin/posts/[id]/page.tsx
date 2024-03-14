@@ -7,7 +7,6 @@ import type { Post as PostType } from "@/app/_types/Post";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
-import { Categories } from "@/app/_components/Categories";
 
 interface Inputs {
   title: string;
@@ -52,10 +51,10 @@ const PutPost: React.FC = () => {
         thumbnailUrl: post.thumbnailUrl,
         categories: post.postCategories,
       });
-      setValue(
-        "categories",
-        post.postCategories.map(item => item.category)
-      );
+      // setValue(
+      //   "categories",
+      //   post.postCategories.map(item => item.category)
+      // );
     }
   }, [post]);
 
@@ -63,7 +62,7 @@ const PutPost: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    setValue,
+    // setValue,
     formState: { isSubmitting },
   } = useForm<Inputs>({
     defaultValues: {
@@ -76,14 +75,16 @@ const PutPost: React.FC = () => {
 
   if (isLoading || !post) return <div>読み込み中...</div>;
 
-  const defaultCategory = post.postCategories.map(item => item.category);
-  console.log(defaultCategory);
+  // const defaultCategory = post.postCategories.map(item => item.category);
 
   const handleDeletePost = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
-    if (confirmDelete) return;
+    if (!confirmDelete) return;
     setIsDeleting(true);
-    const prams = { method: "DELETE", body: JSON.stringify(id) };
+    const prams = {
+      method: "DELETE",
+      body: JSON.stringify({ id: parseInt(id) }),
+    };
     const data = await fetch(endPoint, prams);
     const { status } = await data.json();
     setIsDeleting(false);
@@ -91,7 +92,8 @@ const PutPost: React.FC = () => {
       window.alert("削除に成功しました");
       router.push("/admin/posts");
     } else {
-      window.alert("削除に成功しました");
+      window.alert("削除に失敗しました");
+      console.log(status);
     }
   };
 
@@ -100,7 +102,6 @@ const PutPost: React.FC = () => {
     name: string;
   }
   const onSubmit: SubmitHandler<Inputs> = async data => {
-    console.log(data);
     const aryObj: categoryType[] = data.categories.map(item =>
       JSON.parse(item.toString())
     );
