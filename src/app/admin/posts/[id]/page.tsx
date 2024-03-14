@@ -17,7 +17,7 @@ interface Inputs {
 }
 
 const PutPost: React.FC = () => {
-  const { id } = useParams();
+  const { id }: { id: string } = useParams();
   const url = `/api/posts/${id}`;
   const endPoint = `/api/admin/posts/[id]`;
   const router = useRouter();
@@ -52,6 +52,10 @@ const PutPost: React.FC = () => {
         thumbnailUrl: post.thumbnailUrl,
         categories: post.postCategories,
       });
+      setValue(
+        "categories",
+        post.postCategories.map(item => item.category)
+      );
     }
   }, [post]);
 
@@ -59,6 +63,7 @@ const PutPost: React.FC = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { isSubmitting },
   } = useForm<Inputs>({
     defaultValues: {
@@ -70,6 +75,9 @@ const PutPost: React.FC = () => {
   });
 
   if (isLoading || !post) return <div>読み込み中...</div>;
+
+  const defaultCategory = post.postCategories.map(item => item.category);
+  console.log(defaultCategory);
 
   const handleDeletePost = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
@@ -87,8 +95,16 @@ const PutPost: React.FC = () => {
     }
   };
 
+  interface categoryType {
+    id: Number;
+    name: string;
+  }
   const onSubmit: SubmitHandler<Inputs> = async data => {
-    const categoryIds = data.categories.map(item => parseInt(item));
+    console.log(data);
+    const aryObj: categoryType[] = data.categories.map(item =>
+      JSON.parse(item.toString())
+    );
+    const categoryIds = aryObj.map(item => item.id);
     const prams = {
       method: "PUT",
       body: JSON.stringify({
@@ -167,7 +183,10 @@ const PutPost: React.FC = () => {
             {...register("categories")}
           >
             {category.map(item => (
-              <option key={item.id} value={item.id}>
+              <option
+                key={item.id}
+                value={JSON.stringify({ id: item.id, name: item.name })}
+              >
                 {item.name}
               </option>
             ))}
