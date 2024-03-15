@@ -3,7 +3,7 @@
 
 import { useApi } from "@/app/_hooks/useApi";
 import { useNewPost } from "./_hooks/useNewPost";
-import type { Category } from "@prisma/client";
+import { Category } from "@prisma/client";
 
 const NewPost: React.FC = () => {
   const url = "/api/admin/posts/new";
@@ -18,7 +18,7 @@ const NewPost: React.FC = () => {
   const { data, isLoading } = useApi(categoriesUrl, { method: "GET" });
 
   if (isLoading) return <div>読み込み中...</div>;
-  const { data: name }: { data: Category[] } = data;
+  const { data: categories }: { data: Category[] } = data;
 
   return (
     <div className="max-w-[800px] mx-auto py-10">
@@ -64,11 +64,10 @@ const NewPost: React.FC = () => {
           <select
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
-            defaultValue={[]}
             multiple
             {...register("categories")}
           >
-            {name.map(item => (
+            {categories.map(item => (
               <option
                 key={item.id}
                 value={JSON.stringify({ id: item.id, name: item.name })}

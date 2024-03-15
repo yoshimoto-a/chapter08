@@ -3,10 +3,10 @@
 
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import type { Post as PostType } from "@/app/_types/Post";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
+import { Post, PostCategory } from "@prisma/client";
 
 interface Inputs {
   title: string;
@@ -21,48 +21,14 @@ const PutPost: React.FC = () => {
   const endPoint = `/api/admin/posts/[id]`;
   const router = useRouter();
   const [isLoading, setLoading] = useState(true);
-  const [post, setPost] = useState<PostType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [category, setCategory] = useState<Category[]>([]);
-
-  useEffect(() => {
-    const fetcher = async () => {
-      setLoading(true);
-      const resp = await fetch(url, { method: "GET" });
-      const data = await resp.json();
-      setPost(data.post);
-
-      const categoryResp = await fetch("/api/admin/categories", {
-        method: "GET",
-      });
-      const categoryData = await categoryResp.json();
-      setCategory(categoryData.data);
-
-      setLoading(false);
-    };
-    fetcher();
-  }, []);
-
-  useEffect(() => {
-    if (post) {
-      reset({
-        title: post.title,
-        content: post.content,
-        thumbnailUrl: post.thumbnailUrl,
-        categories: post.postCategories,
-      });
-      // setValue(
-      //   "categories",
-      //   post.postCategories.map(item => item.category)
-      // );
-    }
-  }, [post]);
-
+  const [categories, setCategories] = useState<Category[]>([]);
   const {
     register,
     handleSubmit,
     reset,
-    // setValue,
+    setValue,
+    watch,
     formState: { isSubmitting },
   } = useForm<Inputs>({
     defaultValues: {
@@ -73,9 +39,52 @@ const PutPost: React.FC = () => {
     },
   });
 
-  if (isLoading || !post) return <div>読み込み中...</div>;
+  interface PostResponse {
+    status: number;
+    post: Post & {
+      postCategories: (PostCategory & { category: Category })[];
+    };
+  }
 
-  // const defaultCategory = post.postCategories.map(item => item.category);
+  useEffect(() => {
+    const fetcher = async () => {
+      setLoading(true);
+      const resp = await fetch(url, { method: "GET" });
+      const { post }: PostResponse = await resp.json();
+
+      reset({
+        title: post.title,
+        content: post.content,
+        thumbnailUrl: post.thumbnailUrl,
+        categories: post.postCategories.map(postCategory => {
+          return {
+            id: postCategory.category.id,
+            name: postCategory.category.name,
+          };
+        }),
+      });
+      setLoading(false);
+    };
+    fetcher();
+  }, [reset, url]);
+
+  interface CategoryResponse {
+    status: number;
+    data: Category[];
+  }
+
+  useEffect(() => {
+    const fetcher = async () => {
+      const categoryResp = await fetch("/api/admin/categories", {
+        method: "GET",
+      });
+      const { data }: CategoryResponse = await categoryResp.json();
+      setCategories(data);
+    };
+    fetcher();
+  }, []);
+
+  if (isLoading) return <div>読み込み中...</div>;
 
   const handleDeletePost = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
@@ -97,15 +106,8 @@ const PutPost: React.FC = () => {
     }
   };
 
-  interface categoryType {
-    id: Number;
-    name: string;
-  }
   const onSubmit: SubmitHandler<Inputs> = async data => {
-    const aryObj: categoryType[] = data.categories.map(item =>
-      JSON.parse(item.toString())
-    );
-    const categoryIds = aryObj.map(item => item.id);
+    const categoryIds = data.categories.map(item => item.id);
     const prams = {
       method: "PUT",
       body: JSON.stringify({
@@ -131,6 +133,21 @@ const PutPost: React.FC = () => {
         console.log(e.message);
         window.alert("登録に失敗しました");
       }
+    }
+  };
+
+  const handleSelectCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = Number(e.target.value);
+    const isSelected = watch("categories")
+      .map(c => c.id)
+      .includes(id);
+
+    if (isSelected) {
+      const newCategories = watch("categories").filter(c => c.id !== id);
+      setValue("categories", newCategories);
+    } else {
+      const category = categories.find(c => c.id === id);
+      setValue("categories", [...watch("categories"), category as Category]);
     }
   };
 
@@ -181,16 +198,19 @@ const PutPost: React.FC = () => {
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
-            {...register("categories")}
+            onChange={handleSelectCategory}
           >
-            {category.map(item => (
-              <option
-                key={item.id}
-                value={JSON.stringify({ id: item.id, name: item.name })}
-              >
-                {item.name}
-              </option>
-            ))}
+            {categories.map(item => {
+              const isSelected = watch("categories")
+                .map(c => c.id)
+                .includes(item.id);
+
+              return (
+                <option key={item.id} value={item.id}>
+                  {item.name} {isSelected ? "✅" : ""}
+                </option>
+              );
+            })}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg

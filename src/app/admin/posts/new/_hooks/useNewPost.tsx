@@ -10,7 +10,6 @@ export const useNewPost = (url: string) => {
     thumbnailUrl: string;
     categories: Category[];
   }
-
   const router = useRouter();
   const {
     register,
