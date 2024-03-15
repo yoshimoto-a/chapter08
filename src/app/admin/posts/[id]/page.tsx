@@ -211,6 +211,7 @@ const PutPost: React.FC = () => {
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
+            // 選択時の型をcategoryIdsに合わせるため、registerを用いずに、handleSelectCategory内で型を合わせてsetValueする形で行います。
             onChange={handleSelectCategory}
           >
             {categories.map((item) => {
