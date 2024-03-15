@@ -41,12 +41,12 @@ const PutPost: React.FC = () => {
   });
 
   // 記事詳細APIのレスポンス型を定義しておく（src/app/admin/posts/[id]/_types/index.tsに移動）
-  type PostResponse = {
+  interface PostResponse {
     status: number;
     post: Post & {
       postCategories: (PostCategory & { category: Category })[];
     };
-  };
+  }
 
   useEffect(() => {
     const fetcher = async () => {
@@ -74,10 +74,10 @@ const PutPost: React.FC = () => {
   }, [reset, url]);
 
   // カテゴリー一覧APIのレスポンス型を定義しておく（src/app/admin/posts/[id]/_types/index.tsに移動）
-  type CategoryResponse = {
+  interface CategoryResponse {
     status: number;
     data: Category[];
-  };
+  }
 
   // カテゴリー一覧を取得は別処理としておこなう
   useEffect(() => {
