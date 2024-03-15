@@ -3,12 +3,12 @@
 
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import type { Post as PostType } from "@/app/_types/Post";
 import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
+import { Post, PostCategory } from "@prisma/client";
 
-interface Inputs {
+interface PostForm {
   title: string;
   content: string;
   thumbnailUrl: string;
@@ -21,50 +21,17 @@ const PutPost: React.FC = () => {
   const endPoint = `/api/admin/posts/[id]`;
   const router = useRouter();
   const [isLoading, setLoading] = useState(true);
-  const [post, setPost] = useState<PostType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [category, setCategory] = useState<Category[]>([]);
-
-  useEffect(() => {
-    const fetcher = async () => {
-      setLoading(true);
-      const resp = await fetch(url, { method: "GET" });
-      const data = await resp.json();
-      setPost(data.post);
-
-      const categoryResp = await fetch("/api/admin/categories", {
-        method: "GET",
-      });
-      const categoryData = await categoryResp.json();
-      setCategory(categoryData.data);
-
-      setLoading(false);
-    };
-    fetcher();
-  }, []);
-
-  useEffect(() => {
-    if (post) {
-      reset({
-        title: post.title,
-        content: post.content,
-        thumbnailUrl: post.thumbnailUrl,
-        categories: post.postCategories,
-      });
-      // setValue(
-      //   "categories",
-      //   post.postCategories.map(item => item.category)
-      // );
-    }
-  }, [post]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const {
     register,
     handleSubmit,
     reset,
-    // setValue,
+    setValue,
+    watch,
     formState: { isSubmitting },
-  } = useForm<Inputs>({
+  } = useForm<PostForm>({
     defaultValues: {
       title: "",
       content: "",
@@ -73,9 +40,57 @@ const PutPost: React.FC = () => {
     },
   });
 
-  if (isLoading || !post) return <div>読み込み中...</div>;
+  // 記事詳細APIのレスポンス型を定義しておく（src/app/admin/posts/[id]/_types/index.tsに移動）
+  type PostResponse = {
+    status: number;
+    post: Post & {
+      postCategories: (PostCategory & { category: Category })[];
+    };
+  };
 
-  // const defaultCategory = post.postCategories.map(item => item.category);
+  useEffect(() => {
+    const fetcher = async () => {
+      setLoading(true);
+      const resp = await fetch(url, { method: "GET" });
+      const { post }: PostResponse = await resp.json();
+
+      // 取得したデータをresetでセット。
+      reset({
+        title: post.title,
+        content: post.content,
+        thumbnailUrl: post.thumbnailUrl,
+        // APIレスポンスのpostCategories⇨formのcategoriesに型変換
+        categories: post.postCategories.map((postCategory) => {
+          return {
+            id: postCategory.category.id,
+            name: postCategory.category.name,
+          };
+        }),
+      });
+      setLoading(false);
+    };
+
+    fetcher();
+  }, [reset, url]);
+
+  // カテゴリー一覧APIのレスポンス型を定義しておく（src/app/admin/posts/[id]/_types/index.tsに移動）
+  type CategoryResponse = {
+    status: number;
+    data: Category[];
+  };
+
+  // カテゴリー一覧を取得は別処理としておこなう
+  useEffect(() => {
+    const fetcher = async () => {
+      const resp = await fetch("/api/admin/categories", { method: "GET" });
+      const { data }: CategoryResponse = await resp.json();
+      setCategories(data);
+    };
+
+    fetcher();
+  }, []);
+
+  if (isLoading) return <div>読み込み中...</div>;
 
   const handleDeletePost = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
@@ -97,15 +112,8 @@ const PutPost: React.FC = () => {
     }
   };
 
-  interface categoryType {
-    id: Number;
-    name: string;
-  }
-  const onSubmit: SubmitHandler<Inputs> = async data => {
-    const aryObj: categoryType[] = data.categories.map(item =>
-      JSON.parse(item.toString())
-    );
-    const categoryIds = aryObj.map(item => item.id);
+  const onSubmit: SubmitHandler<PostForm> = async (data) => {
+    const categoryIds = data.categories.map((item) => item.id);
     const prams = {
       method: "PUT",
       body: JSON.stringify({
@@ -119,7 +127,6 @@ const PutPost: React.FC = () => {
     try {
       const resp = await fetch("/api/admin/posts/[id]", prams);
       const contents = await resp.json();
-      console.log(contents);
       if (contents.status === 200) {
         window.alert("登録に成功しました");
         router.push("/admin/posts");
@@ -131,6 +138,29 @@ const PutPost: React.FC = () => {
         console.log(e.message);
         window.alert("登録に失敗しました");
       }
+    }
+  };
+
+  // カテゴリー選択時の処理
+  const handleSelectCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = Number(e.target.value);
+    // 選択されたカテゴリーが既に選択されているかどうかを確認
+    const isSelected = watch("categories")
+      .map((c) => c.id)
+      .includes(id);
+
+    // 選択されている場合
+    if (isSelected) {
+      // 選択されたカテゴリーを除外した新しいカテゴリーリストを作成
+      const newCategories = watch("categories").filter((c) => c.id !== id);
+      // 新しいカテゴリーリストをセット
+      setValue("categories", newCategories);
+    } else {
+      // 選択されていない場合
+      // 選択されたカテゴリーを取得
+      const category = categories.find((c) => c.id === id);
+      // 選択されたカテゴリーを追加した新しいカテゴリーリストをセット
+      setValue("categories", [...watch("categories"), category as Category]);
     }
   };
 
@@ -181,16 +211,19 @@ const PutPost: React.FC = () => {
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
-            {...register("categories")}
+            onChange={handleSelectCategory}
           >
-            {category.map(item => (
-              <option
-                key={item.id}
-                value={JSON.stringify({ id: item.id, name: item.name })}
-              >
-                {item.name}
-              </option>
-            ))}
+            {categories.map((item) => {
+              const isSelected = watch("categories")
+                .map((c) => c.id)
+                .includes(item.id);
+
+              return (
+                <option key={item.id} value={item.id}>
+                  {item.name} {isSelected ? "✅" : ""}
+                </option>
+              );
+            })}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg
