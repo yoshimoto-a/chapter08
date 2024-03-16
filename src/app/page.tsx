@@ -24,7 +24,6 @@ const Post: React.FC = () => {
   if (isLoading) return <div>読み込み中...</div>;
   if (!data || data.length === 0) return <div>記事がありません</div>;
 
-  console.log(data);
   return (
     <>
       <div className="px-4 mt-4">

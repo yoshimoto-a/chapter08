@@ -4,13 +4,14 @@
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-//変　finduniqeにする
-export const GET = async (req: Request) => {
+export const GET = async (
+  req: Request,
+  { params }: { params: { id: string } }
+) => {
   try {
-    const body = await req.json();
-    const { id } = body;
+    const { id } = params;
     const getPost = await prisma.post.findUnique({
-      where: { id },
+      where: { id: parseInt(id) },
       include: {
         postCategories: {
           include: {
@@ -27,6 +28,7 @@ export const GET = async (req: Request) => {
     return Response.json({ status: 200, post: getPost });
   } catch (e) {
     if (e instanceof Error) {
+      console.log(e.message);
       return Response.json({ status: 400, e });
     }
   }

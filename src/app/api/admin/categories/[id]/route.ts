@@ -11,26 +11,12 @@ export const GET = async (
   { params }: { params: { id: string } }
 ) => {
   const { id } = params;
-  console.log(id); //取得出来ている
   try {
-    const post = await prisma.post.findUnique({
+    const post = await prisma.category.findUnique({
       where: {
         id: parseInt(id),
       },
-      include: {
-        postCategories: {
-          include: {
-            category: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
     });
-
     return NextResponse.json({ status: "OK", post: post }, { status: 200 });
   } catch (error) {
     if (error instanceof Error)

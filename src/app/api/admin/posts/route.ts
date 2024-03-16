@@ -21,7 +21,7 @@ export const POST = async (req: Request) => {
     for (const category of categoryIds) {
       await prisma.postCategory.create({
         data: {
-          categoryId: category.id,
+          categoryId: category,
           postId: post.id,
         },
       });
@@ -29,6 +29,7 @@ export const POST = async (req: Request) => {
     return Response.json({ status: 200, id: post.id });
   } catch (e) {
     if (e instanceof Error) {
+      console.log(e.message);
       return Response.json({ status: 400, message: e.message });
     }
   }

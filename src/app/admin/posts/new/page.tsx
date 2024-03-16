@@ -3,7 +3,8 @@
 
 import { useApi } from "@/app/_hooks/useApi";
 import { useNewPost } from "./_hooks/useNewPost";
-import { Category } from "@prisma/client";
+import { Category } from "@/app/_types/Post";
+import React from "react";
 
 const NewPost: React.FC = () => {
   const url = "/api/admin/posts/new";
@@ -11,6 +12,8 @@ const NewPost: React.FC = () => {
     register,
     handleSubmit,
     onSubmit,
+    watch,
+    setValue,
     formState: { isSubmitting },
   } = useNewPost(url);
 
@@ -20,6 +23,20 @@ const NewPost: React.FC = () => {
   if (isLoading) return <div>読み込み中...</div>;
   const { data: categories }: { data: Category[] } = data;
 
+  const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = Number(e.target.value);
+    const isSelected = watch("categories")
+      .map(c => c.id)
+      .includes(id);
+
+    if (isSelected) {
+      const newCategories = watch("categories").filter(c => c.id !== id);
+      setValue("categories", newCategories);
+    } else {
+      const category = categories.find(c => c.id === id);
+      setValue("categories", [...watch("categories"), category as Category]);
+    }
+  };
   return (
     <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">記事作成</h1>
@@ -35,14 +52,14 @@ const NewPost: React.FC = () => {
             {...register("title")}
           ></input>
         </div>
-        <label htmlFor="contents" className="w-[240px]">
+        <label htmlFor="content" className="w-[240px]">
           内容
         </label>
         <div className="w-full">
           <textarea
             id="contents"
             className="w-full border border-gray-300 rounded-lg p-4 mb-4"
-            {...register("contents")}
+            {...register("content")}
           ></textarea>
         </div>
         <label htmlFor="title" className="w-[240px]">
@@ -65,16 +82,20 @@ const NewPost: React.FC = () => {
             id="categories"
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
-            {...register("categories")}
+            onChange={onChange}
+            // {...register("categories")}
           >
-            {categories.map(item => (
-              <option
-                key={item.id}
-                value={JSON.stringify({ id: item.id, name: item.name })}
-              >
-                {item.name}
-              </option>
-            ))}
+            {categories.map(item => {
+              const isSelected = watch("categories")
+                .map(c => c.id)
+                .includes(item.id);
+
+              return (
+                <option key={item.id} value={item.id}>
+                  {item.name} {isSelected ? "✅" : ""}
+                </option>
+              );
+            })}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
             <svg

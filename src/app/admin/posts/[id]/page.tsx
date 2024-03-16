@@ -17,7 +17,6 @@ interface Inputs {
 
 const PutPost: React.FC = () => {
   const { id }: { id: string } = useParams();
-  const url = `/api/posts/${id}`;
   const endPoint = `/api/admin/posts/[id]`;
   const router = useRouter();
   const [isLoading, setLoading] = useState(true);
@@ -49,9 +48,8 @@ const PutPost: React.FC = () => {
   useEffect(() => {
     const fetcher = async () => {
       setLoading(true);
-      const resp = await fetch(url, { method: "GET" });
+      const resp = await fetch(`/api/admin/posts/${id}`, { method: "GET" });
       const { post }: PostResponse = await resp.json();
-
       reset({
         title: post.title,
         content: post.content,
@@ -66,7 +64,7 @@ const PutPost: React.FC = () => {
       setLoading(false);
     };
     fetcher();
-  }, [reset, url]);
+  }, [reset]);
 
   interface CategoryResponse {
     status: number;

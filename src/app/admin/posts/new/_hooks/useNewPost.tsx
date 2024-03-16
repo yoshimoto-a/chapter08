@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 export const useNewPost = (url: string) => {
   interface Inputs {
     title: string;
-    contents: string;
+    content: string;
     thumbnailUrl: string;
     categories: Category[];
   }
@@ -14,29 +14,32 @@ export const useNewPost = (url: string) => {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { isSubmitting },
-  } = useForm<Inputs>({});
+  } = useForm<Inputs>({
+    defaultValues: {
+      title: "",
+      content: "",
+      thumbnailUrl: "https://placehold.jp/800x400.png",
+      categories: [],
+    },
+  });
 
   const throwError = () => {
     throw new Error("error");
   };
 
   const onSubmit: SubmitHandler<Inputs> = async data => {
-    let aryCategory: number[] = [];
-    let jsonData;
-    //カテゴリーのidを配列に入れる
-    data.categories.map(item => {
-      jsonData = JSON.parse(item.toString());
-      aryCategory.push(jsonData.id);
-    });
+    const categoryIds = data.categories.map(item => item.id);
 
     const prams = {
       method: "POST",
       body: JSON.stringify({
         title: data.title,
-        content: data.contents,
+        content: data.content,
         thumbnailUrl: data.thumbnailUrl,
-        postCategories: aryCategory,
+        categoryIds,
       }),
     };
     try {
@@ -60,6 +63,8 @@ export const useNewPost = (url: string) => {
     register,
     handleSubmit,
     onSubmit,
+    watch,
+    setValue,
     formState: { isSubmitting },
   };
 };

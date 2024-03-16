@@ -1,7 +1,6 @@
 /*管理者カテゴリー編集ページ */
 "use client";
 import { useParams } from "next/navigation";
-import { Category } from "@/app/_types/Post";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -16,9 +15,8 @@ const CategoryPut: React.FC = () => {
       const resp = await fetch(`/api/admin/categories/${id}`, {
         method: "GET",
       });
-      const post = await resp.json();
-      console.log(post);
-      // setText(post)
+      const { post } = await resp.json();
+      setText(post.name);
       setIsLoading(false);
     };
     fetcher();
