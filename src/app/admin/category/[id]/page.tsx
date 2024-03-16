@@ -1,75 +1,80 @@
 /*管理者カテゴリー編集ページ */
 "use client";
-import { useApi } from "@/app/_hooks/useApi";
-import { useParams } from 'next/navigation';
+import { useParams } from "next/navigation";
 import { Category } from "@/app/_types/Post";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const CategoryPut: React.FC = () => {
   const { id } = useParams();
   const [text, setText] = useState<string>("");
-  const {data,isLoading} = useApi("/api/admin/categories",{ method: "GET" });
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const categories: Category[] = data ? data.data : [];
-    const category = categories.find(item=>item.id === Number(id))
-    if (category) {
-      setText(category.name.toString())
-    }
-  }, [data, id]);
-  
+    const fetcher = async () => {
+      const resp = await fetch(`/api/admin/categories/${id}`, {
+        method: "GET",
+      });
+      const post = await resp.json();
+      console.log(post);
+      // setText(post)
+      setIsLoading(false);
+    };
+    fetcher();
+  }, []);
+
   if (isLoading) return <div>読み込み中...</div>;
-  if (!data) return <div>カテゴリーがありません</div>;
 
   const PutCategory = async () => {
     try {
       const prams = {
-        method:"PUT",
-        body :JSON.stringify({
-          id:Number(id),
-          name:text
-        })
-      }
-      const resp = await fetch("/api/admin/categories/[id]",prams);
-      if (resp.status === 200){
-        window.alert("更新に成功しました")
-        window.location.href = '/admin/category';
-      }else {
+        method: "PUT",
+        body: JSON.stringify({
+          id: Number(id),
+          name: text,
+        }),
+      };
+      const resp = await fetch("/api/admin/categories/[id]", prams);
+      if (resp.status === 200) {
+        window.alert("更新に成功しました");
+        router.push("/admin/category");
+      } else {
         window.alert("更新に失敗しました");
       }
     } catch (e) {
-      if(e instanceof Error){
+      if (e instanceof Error) {
         window.alert("更新に失敗しました");
       }
     }
-  }
-  
-  const DeleteCategory = async () => {
+  };
+
+  const deleteCategory = async () => {
     const confirmDelete = window.confirm("削除してもよろしいですか？");
-    if(!confirmDelete) return;
+    if (!confirmDelete) return;
     try {
       const prams = {
-        method:"DELETE",
-        body :JSON.stringify({
-          id:Number(id)
-        })
-      }
-      const resp = await fetch("/api/admin/categories/[id]",prams);
-      if (resp.status === 200){
-        window.alert("削除に成功しました")
-        window.location.href = '/admin/category';
-      }else {
+        method: "DELETE",
+        body: JSON.stringify({
+          id: Number(id),
+        }),
+      };
+      const resp = await fetch("/api/admin/categories/[id]", prams);
+      if (resp.status === 200) {
+        window.alert("削除に成功しました");
+        router.push("/admin/category");
+      } else {
         window.alert("削除に失敗しました");
       }
     } catch (e) {
-      if(e instanceof Error){
+      if (e instanceof Error) {
         window.alert("削除に失敗しました");
       }
     }
-  }
+  };
 
   return (
-      <div className="max-w-[800px] mx-auto py-10">
+    <div className="max-w-[800px] mx-auto py-10">
       <h1 className="text-xl font-bold mb-10">記事編集</h1>
       <div>
         <label htmlFor="title" className="w-[240px]">
@@ -85,24 +90,24 @@ const CategoryPut: React.FC = () => {
           ></input>
         </div>
         <div className="flex">
-        <button
-          type="button"
-          className="bg-gray-800 text-white font-bold py-2 px-4 rounded-lg mr-4"
-          onClick={PutCategory}
-        >
-          登録
-        </button>
-        <button
-          type="button"
-          className="bg-red-800 text-white font-bold py-2 px-4 rounded-lg"
-          onClick={DeleteCategory}
-        >
-          削除
-        </button>
-      </div>
+          <button
+            type="button"
+            className="bg-gray-800 text-white font-bold py-2 px-4 rounded-lg mr-4"
+            onClick={PutCategory}
+          >
+            登録
+          </button>
+          <button
+            type="button"
+            className="bg-red-800 text-white font-bold py-2 px-4 rounded-lg"
+            onClick={deleteCategory}
+          >
+            削除
+          </button>
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default CategoryPut;
