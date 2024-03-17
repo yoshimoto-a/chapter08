@@ -1,26 +1,44 @@
+/*記事一覧ページ*/
 "use client";
 
 import "./globals.css";
 import { Categories } from "@/app/_components/Categories";
 import dayjs from "dayjs";
 import Link from "next/link";
-import { useApi } from "./_hooks/useApi";
-import { MicroCmsPost } from "./_types/MicroCmsPost";
+import { useState, useEffect } from "react";
+import type { Post } from "./_types/Post";
 
-const BlogItem: React.FC = () => {
-  const {data , isLoading} = useApi("https://reoh07vbzw.microcms.io/api/v1/posts");
+const Post: React.FC = () => {
+  const [data, setData] = useState<Post[]>();
+  const [isLoading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetcher = async () => {
+      const resp = await fetch("/api/posts/", { method: "GET" });
+      const { posts } = await resp.json();
+      setData(posts);
+      setLoading(false);
+    };
+    fetcher();
+  }, []);
 
   if (isLoading) return <div>読み込み中...</div>;
-  if (!data) return <div>記事がありません</div>;
-  const { contents }: { contents: MicroCmsPost[] } = data;
+  if (!data || data.length === 0) return <div>記事がありません</div>;
 
   return (
     <>
+      <div className="px-4 mt-4">
+        <Link href={"/admin/posts"} className="text-blue-500 hover:underline">
+          管理画面
+        </Link>
+      </div>
       <div className="mx-auto max-w-screen-lg px-4 my-10">
         <ul>
-          {contents.map((item) => (
+          {data.map(item => (
             <li className="flex flex-col list-none m-0 p-0" key={item.id}>
-              <Link href={`/post/${item.id}`} className="text-gray-700 no-underline">
+              <Link
+                href={`/post/${item.id}`}
+                className="text-gray-700 no-underline"
+              >
                 <div className="border border-gray-300 flex flex-row mb-8 p-4">
                   <div>
                     <div className="flex justify-between">
@@ -28,7 +46,11 @@ const BlogItem: React.FC = () => {
                         {dayjs(item.createdAt).format("YYYY/MM/DD")}
                       </div>
                       <div className="flex flex-wrap">
-                        <Categories categories={item.categories}></Categories>
+                        <Categories
+                          categories={item.postCategories.map(
+                            category => category.category
+                          )}
+                        ></Categories>
                       </div>
                     </div>
                     <p className="text-xl mb-4 mt-2">{item.title}</p>
@@ -46,4 +68,4 @@ const BlogItem: React.FC = () => {
     </>
   );
 };
- export default BlogItem;
+export default Post;
