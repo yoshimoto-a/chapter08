@@ -1,7 +1,18 @@
-import  Link  from "next/link";
-//import "../globals.css";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useRouteGuard } from "./_hooks/useRouteGuard";
 
-const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
+export default function SidebarLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  useRouteGuard();
+
+  const pathname = usePathname();
+  const isSelected = (href: string) => {
+    return pathname.includes(href);
+  };
   return (
     <div className="flex">
       <div className="w-1/4 bg-gray-200 h-screen">
@@ -17,6 +28,4 @@ const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="w-3/4 p-4">{children}</div>
     </div>
   );
-};
-
-export default SidebarLayout;
+}

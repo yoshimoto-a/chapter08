@@ -28,7 +28,6 @@ const PostItem: React.FC = () => {
   if (!postData) return <div>記事がありません</div>;
 
   const categories = postData.postCategories.map(item => item.category);
-
   return (
     <div className="mx-auto max-w-800px flex justify-center items-center">
       <div className="flex flex-col p-4">

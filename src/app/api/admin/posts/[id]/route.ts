@@ -28,7 +28,6 @@ export const GET = async (
     return Response.json({ status: 200, post: getPost });
   } catch (e) {
     if (e instanceof Error) {
-      console.log(e.message);
       return Response.json({ status: 400, e });
     }
   }
