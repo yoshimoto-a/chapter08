@@ -3,7 +3,7 @@
 /*言語のカテゴリー*/
 import "../globals.css";
 import React from "react";
-import type { Category } from "@prisma/client";
+import type { Category } from "../_types/Post";
 
 interface Props {
   categories: Category[];
