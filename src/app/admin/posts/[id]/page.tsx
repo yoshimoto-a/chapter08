@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
 import { Post, PostCategory } from "@prisma/client";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 interface Inputs {
   title: string;
@@ -22,6 +23,8 @@ const PutPost: React.FC = () => {
   const [isLoading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const { token } = useSupabaseSession();
+
   const {
     register,
     handleSubmit,
@@ -46,9 +49,17 @@ const PutPost: React.FC = () => {
   }
 
   useEffect(() => {
+    if (!token) return;
+
     const fetcher = async () => {
       setLoading(true);
-      const resp = await fetch(`/api/admin/posts/${id}`, { method: "GET" });
+      const resp = await fetch(`/api/admin/posts/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
       const { post }: PostResponse = await resp.json();
       reset({
         title: post.title,
@@ -64,7 +75,7 @@ const PutPost: React.FC = () => {
       setLoading(false);
     };
     fetcher();
-  }, [reset]);
+  }, [reset, token]);
 
   interface CategoryResponse {
     status: number;
@@ -72,24 +83,35 @@ const PutPost: React.FC = () => {
   }
 
   useEffect(() => {
+    if (!token) return;
     const fetcher = async () => {
       const categoryResp = await fetch("/api/admin/categories", {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
       });
       const { data }: CategoryResponse = await categoryResp.json();
       setCategories(data);
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (isLoading) return <div>読み込み中...</div>;
 
   const handleDeletePost = async () => {
+    if (!token) return;
+
     const confirmDelete = window.confirm("削除してもよろしいですか？");
     if (!confirmDelete) return;
     setIsDeleting(true);
     const prams = {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
       body: JSON.stringify({ id: parseInt(id) }),
     };
     const data = await fetch(endPoint, prams);
@@ -105,21 +127,24 @@ const PutPost: React.FC = () => {
   };
 
   const onSubmit: SubmitHandler<Inputs> = async data => {
-    const categoryIds = data.categories.map(item => item.id);
-    const prams = {
-      method: "PUT",
-      body: JSON.stringify({
-        id: parseInt(id),
-        title: data.title,
-        content: data.content,
-        thumbnailUrl: data.thumbnailUrl,
-        categoryIds: categoryIds,
-      }),
-    };
+    if (!token) return;
     try {
-      const resp = await fetch("/api/admin/posts/[id]", prams);
+      const prams = {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
+        body: JSON.stringify({
+          id: parseInt(id),
+          title: data.title,
+          content: data.content,
+          thumbnailUrl: data.thumbnailUrl,
+          categoryIds: data.categories.map(item => item.id),
+        }),
+      };
+      const resp = await fetch(`/api/admin/posts/${id}`, prams);
       const contents = await resp.json();
-      console.log(contents);
       if (contents.status === 200) {
         window.alert("登録に成功しました");
         router.push("/admin/posts");

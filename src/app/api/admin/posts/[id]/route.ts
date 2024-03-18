@@ -2,12 +2,19 @@
 /*管理者記事詳細更新API */
 /*管理者記事詳細削除API */
 import { PrismaClient } from "@prisma/client";
+import { supabase } from "@/utils/supabase";
 
 const prisma = new PrismaClient();
 export const GET = async (
   req: Request,
   { params }: { params: { id: string } }
 ) => {
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const { id } = params;
     const getPost = await prisma.post.findUnique({
@@ -34,6 +41,12 @@ export const GET = async (
 };
 
 export const PUT = async (req: Request) => {
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   const body = await req.json();
   const { id, title, content, categoryIds, thumbnailUrl } = body;
   try {
@@ -72,6 +85,12 @@ export const PUT = async (req: Request) => {
 };
 
 export const DELETE = async (req: Request) => {
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const { id } = await req.json();
     const deletePost = await prisma.post.delete({

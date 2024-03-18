@@ -1,10 +1,17 @@
 /*管理者記事新規作成API */
 /*管理者記事一覧取得API */
 import { PrismaClient } from "@prisma/client";
+import { supabase } from "@/utils/supabase";
 
 const prisma = new PrismaClient();
 
 export const POST = async (req: Request) => {
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const body = await req.json();
     const { title, content, categoryIds, thumbnailUrl } = body;
@@ -35,7 +42,13 @@ export const POST = async (req: Request) => {
   }
 };
 
-export const GET = async () => {
+export const GET = async (req: Request) => {
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const getPosts = await prisma.post.findMany({
       orderBy: {
@@ -45,6 +58,7 @@ export const GET = async () => {
     return Response.json({ status: 200, posts: getPosts });
   } catch (e) {
     if (e instanceof Error) {
+      console.log(e);
       return Response.json({ status: 400, e });
     }
   }

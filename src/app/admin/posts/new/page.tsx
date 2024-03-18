@@ -1,10 +1,10 @@
 /*管理者新規作成ページ */
 "use client";
-
-import { useApi } from "@/app/_hooks/useApi";
 import { useNewPost } from "./_hooks/useNewPost";
 import { Category } from "@/app/_types/Post";
 import React from "react";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useState, useEffect } from "react";
 
 const NewPost: React.FC = () => {
   const url = "/api/admin/posts/new";
@@ -18,9 +18,30 @@ const NewPost: React.FC = () => {
   } = useNewPost(url);
 
   const categoriesUrl = "/api/admin/categories";
-  const { data, isLoading } = useApi(categoriesUrl, { method: "GET" });
+  const { token } = useSupabaseSession();
+  const [data, setData] = useState<any>();
+  const [isLoading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!token) return;
+
+    const fetcher = async () => {
+      setLoading(true);
+      const resp = await fetch(categoriesUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
+      const data = await resp.json();
+      setData(data);
+      setLoading(false);
+    };
+    fetcher();
+  }, [token]);
 
   if (isLoading) return <div>読み込み中...</div>;
+  console.log(data);
   const { data: categories }: { data: Category[] } = data;
 
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

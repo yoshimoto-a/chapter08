@@ -2,14 +2,20 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 const CategoryPost: React.FC = () => {
   const [text, setText] = useState<string>("");
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   const clickSubmit = async () => {
     const prams = {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token, // 👈 Header に token を付与
+      },
       body: JSON.stringify({
         name: text,
       }),

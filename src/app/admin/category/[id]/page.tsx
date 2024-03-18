@@ -3,31 +3,43 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
 const CategoryPut: React.FC = () => {
   const { id } = useParams();
   const [text, setText] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const { token } = useSupabaseSession();
 
   useEffect(() => {
+    if (!token) return;
+
     const fetcher = async () => {
       const resp = await fetch(`/api/admin/categories/${id}`, {
-        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
       });
       const { post } = await resp.json();
       setText(post.name);
       setIsLoading(false);
     };
     fetcher();
-  }, []);
+  }, [token]);
 
   if (isLoading) return <div>読み込み中...</div>;
 
   const PutCategory = async () => {
+    if (!token) return;
     try {
       const prams = {
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
         body: JSON.stringify({
           id: Number(id),
           name: text,
@@ -48,11 +60,17 @@ const CategoryPut: React.FC = () => {
   };
 
   const deleteCategory = async () => {
+    if (!token) return;
+
     const confirmDelete = window.confirm("削除してもよろしいですか？");
     if (!confirmDelete) return;
     try {
       const prams = {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token, // 👈 Header に token を付与
+        },
         body: JSON.stringify({
           id: Number(id),
         }),
