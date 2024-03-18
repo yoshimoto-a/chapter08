@@ -2,9 +2,12 @@
 "use client";
 import { useNewPost } from "./_hooks/useNewPost";
 import { Category } from "@/app/_types/Post";
-import React from "react";
+import React, { ChangeEvent, ChangeEventHandler } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useState, useEffect } from "react";
+import { supabase } from "@/utils/supabase";
+import { v4 as uuidv4 } from "uuid";
+import Image from "next/image";
 
 const NewPost: React.FC = () => {
   const url = "/api/admin/posts/new";
@@ -21,6 +24,11 @@ const NewPost: React.FC = () => {
   const { token } = useSupabaseSession();
   const [data, setData] = useState<any>();
   const [isLoading, setLoading] = useState(true);
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
+    null
+  );
+
   useEffect(() => {
     if (!token) return;
 
@@ -40,8 +48,23 @@ const NewPost: React.FC = () => {
     fetcher();
   }, [token]);
 
+  useEffect(() => {
+    if (!thumbnailImageKey) return;
+
+    // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
+    const fetcher = async () => {
+      const {
+        data: { publicUrl },
+      } = await supabase.storage
+        .from("post_thumbnail")
+        .getPublicUrl(thumbnailImageKey);
+      setThumbnailImageUrl(publicUrl);
+    };
+
+    fetcher();
+  }, [thumbnailImageKey]);
+
   if (isLoading) return <div>読み込み中...</div>;
-  console.log(data);
   const { data: categories }: { data: Category[] } = data;
 
   const onChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -57,6 +80,36 @@ const NewPost: React.FC = () => {
       const category = categories.find(c => c.id === id);
       setValue("categories", [...watch("categories"), category as Category]);
     }
+  };
+
+  const handleImageChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    if (!event.target.files || event.target.files.length == 0) {
+      // 画像が選択されていないのでreturn
+      return;
+    }
+
+    const file = event.target.files[0]; // 選択された画像を取得
+
+    const filePath = `private/${uuidv4()}`; // ファイルパスを指定
+
+    // Supabaseに画像をアップロード
+    const { data, error } = await supabase.storage
+      .from("post_thumbnail") // ここでバケット名を指定
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    // アップロードに失敗したらエラーを表示して終了
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    // data.pathに、画像固有のkeyが入っているので、thumbnailImageKeyに格納する
+    setThumbnailImageKey(data.path);
   };
   return (
     <div className="max-w-[800px] mx-auto py-10">
@@ -88,13 +141,23 @@ const NewPost: React.FC = () => {
         </label>
         <div className="w-full">
           <input
-            type="text"
+            type="file"
             id="thumbnailUrl"
-            className="border border-gray-300 rounded-lg p-4 w-full mb-4"
-            defaultValue="https://placehold.jp/800x400.png"
-            {...register("thumbnailUrl")}
+            className="pt-4 w-full mb-4"
+            accept="image/*"
+            onChange={handleImageChange}
           ></input>
         </div>
+        {thumbnailImageUrl && (
+          <div className="mt-2">
+            <Image
+              src={thumbnailImageUrl}
+              alt="thumbnail"
+              width={400}
+              height={400}
+            />
+          </div>
+        )}
         <label htmlFor="title" className="w-[240px]">
           カテゴリー
         </label>
@@ -104,7 +167,6 @@ const NewPost: React.FC = () => {
             className="border border-gray-300 rounded-lg p-4 w-full appearance-none mb-4"
             multiple
             onChange={onChange}
-            // {...register("categories")}
           >
             {categories.map(item => {
               const isSelected = watch("categories")

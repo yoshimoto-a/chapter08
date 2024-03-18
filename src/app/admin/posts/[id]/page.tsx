@@ -24,6 +24,9 @@ const PutPost: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const { token } = useSupabaseSession();
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
+    null
+  );
 
   const {
     register,
