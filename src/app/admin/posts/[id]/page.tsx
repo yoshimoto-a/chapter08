@@ -57,8 +57,9 @@ const PutPost: React.FC = () => {
     };
   }
 
-  const getUrl = async () => {
+  const getUrl = async (thumbnailImageKey: string) => {
     if (!thumbnailImageKey) return;
+    setThumbnailImageKey(thumbnailImageKey);
     // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
     const {
       data: { publicUrl },
@@ -81,16 +82,13 @@ const PutPost: React.FC = () => {
         },
       });
       const { post }: PostResponse = await resp.json();
-      console.log(post);
 
-      if (!thumbnailImageKey) return;
-      // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
-      getUrl();
+      getUrl(post.thumbnailImageKey);
 
       reset({
         title: post.title,
         content: post.content,
-        thumbnailImageKey: thumbnailImageKey,
+        thumbnailImageKey: post.thumbnailImageKey,
         categories: post.postCategories.map(postCategory => {
           return {
             id: postCategory.category.id,
@@ -220,7 +218,7 @@ const PutPost: React.FC = () => {
     }
     // data.pathに、画像固有のkeyが入っているので、thumbnailImageKeyに格納する
     setThumbnailImageKey(data.path);
-    getUrl();
+    getUrl(data.path);
   };
 
   return (
