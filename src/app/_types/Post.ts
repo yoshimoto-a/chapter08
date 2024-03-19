@@ -1,11 +1,11 @@
 export interface Post {
   id: number;
   title: string;
-  thumbnailUrl: string;
+  thumbnailImageKey: string;
   createdAt: string;
   updatedAt: string;
   content: string;
-  postCategories: PostCategory[]
+  postCategories: PostCategory[];
 }
 
 export interface PostCategory {

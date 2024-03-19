@@ -3,16 +3,19 @@
 
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
 import { Post, PostCategory } from "@prisma/client";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import Image from "next/image";
+import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/utils/supabase";
 
 interface Inputs {
   title: string;
   content: string;
-  thumbnailUrl: string;
+  thumbnailImageKey: string;
   categories: Category[];
 }
 
@@ -24,6 +27,9 @@ const PutPost: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const { token } = useSupabaseSession();
+  const [thumbnailImageKey, setThumbnailImageKey] = useState<null | string>(
+    null
+  );
   const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
     null
   );
@@ -39,7 +45,7 @@ const PutPost: React.FC = () => {
     defaultValues: {
       title: "",
       content: "",
-      thumbnailUrl: "",
+      thumbnailImageKey: "",
       categories: [],
     },
   });
@@ -50,6 +56,17 @@ const PutPost: React.FC = () => {
       postCategories: (PostCategory & { category: Category })[];
     };
   }
+
+  const getUrl = async () => {
+    if (!thumbnailImageKey) return;
+    // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
+    const {
+      data: { publicUrl },
+    } = await supabase.storage
+      .from("post_thumbnail")
+      .getPublicUrl(thumbnailImageKey);
+    setThumbnailImageUrl(publicUrl);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -64,10 +81,16 @@ const PutPost: React.FC = () => {
         },
       });
       const { post }: PostResponse = await resp.json();
+      console.log(post);
+
+      if (!thumbnailImageKey) return;
+      // アップロード時に取得した、thumbnailImageKeyを用いて画像のURLを取得
+      getUrl();
+
       reset({
         title: post.title,
         content: post.content,
-        thumbnailUrl: post.thumbnailUrl,
+        thumbnailImageKey: thumbnailImageKey,
         categories: post.postCategories.map(postCategory => {
           return {
             id: postCategory.category.id,
@@ -125,7 +148,6 @@ const PutPost: React.FC = () => {
       router.push("/admin/posts");
     } else {
       window.alert("削除に失敗しました");
-      console.log(status);
     }
   };
 
@@ -142,7 +164,7 @@ const PutPost: React.FC = () => {
           id: parseInt(id),
           title: data.title,
           content: data.content,
-          thumbnailUrl: data.thumbnailUrl,
+          thumbnailImageKey: data.thumbnailImageKey,
           categoryIds: data.categories.map(item => item.id),
         }),
       };
@@ -156,7 +178,6 @@ const PutPost: React.FC = () => {
       }
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
         window.alert("登録に失敗しました");
       }
     }
@@ -175,6 +196,31 @@ const PutPost: React.FC = () => {
       const category = categories.find(c => c.id === id);
       setValue("categories", [...watch("categories"), category as Category]);
     }
+  };
+  const handleImageChange = async (
+    event: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    if (!event.target.files || event.target.files.length == 0) {
+      // 画像が選択されていないのでreturn
+      return;
+    }
+    const file = event.target.files[0]; // 選択された画像を取得
+    const filePath = `private/${uuidv4()}`; // ファイルパスを指定
+    // Supabaseに画像をアップロード
+    const { data, error } = await supabase.storage
+      .from("post_thumbnail") // ここでバケット名を指定
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+    // アップロードに失敗したらエラーを表示して終了
+    if (error) {
+      alert(error.message);
+      return;
+    }
+    // data.pathに、画像固有のkeyが入っているので、thumbnailImageKeyに格納する
+    setThumbnailImageKey(data.path);
+    getUrl();
   };
 
   return (
@@ -209,13 +255,25 @@ const PutPost: React.FC = () => {
         </label>
         <div className="w-full">
           <input
-            type="text"
-            id="thumbnailUrl"
-            className="border border-gray-300 rounded-lg p-4 w-full mb-4"
+            type="file"
+            id="thumbnailImageKey"
+            className="pt-4 w-full mb-4"
             disabled={isSubmitting || isDeleting}
-            {...register("thumbnailUrl")}
+            accept="image/*"
+            onChange={handleImageChange}
           ></input>
         </div>
+        {thumbnailImageUrl && (
+          <div className="mt-2">
+            <Image
+              src={thumbnailImageUrl}
+              alt="thumbnail"
+              width={400}
+              height={400}
+            />
+          </div>
+        )}
+
         <label htmlFor="title" className="w-[240px]">
           カテゴリー
         </label>

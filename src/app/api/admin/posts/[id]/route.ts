@@ -48,14 +48,14 @@ export const PUT = async (req: Request) => {
   // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
   if (error) return Response.json({ status: error.message }, { status: 400 });
   const body = await req.json();
-  const { id, title, content, categoryIds, thumbnailUrl } = body;
+  const { id, title, content, categoryIds, thumbnailImageKey } = body;
   try {
     const post = await prisma.post.update({
       where: { id },
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 

@@ -7,11 +7,13 @@ import dayjs from "dayjs";
 import Image from "next/image";
 import type { Post } from "@/app/_types/Post";
 import { Categories } from "@/app/_components/Categories";
+import { supabase } from "@/utils/supabase";
 
 const PostItem: React.FC = () => {
   const { id } = useParams();
   const [postData, setPostData] = useState<Post>();
   const [isLoading, setLoading] = useState(true);
+  const [thumbnailImageUrl, setThumbnailImageUrl] = useState("");
 
   useEffect(() => {
     const fetcher = async () => {
@@ -19,6 +21,12 @@ const PostItem: React.FC = () => {
       const resp = await fetch(`/api/posts/${id}`, { method: "GET" });
       const { post } = await resp.json();
       setPostData(post);
+      const {
+        data: { publicUrl },
+      } = await supabase.storage
+        .from("post_thumbnail")
+        .getPublicUrl(post.thumbnailImageKey);
+      setThumbnailImageUrl(publicUrl);
       setLoading(false);
     };
     fetcher();
@@ -32,7 +40,7 @@ const PostItem: React.FC = () => {
     <div className="mx-auto max-w-800px flex justify-center items-center">
       <div className="flex flex-col p-4">
         <Image
-          src={"https://placehold.jp/800x400.png"}
+          src={thumbnailImageUrl}
           alt={""}
           width={"800"}
           height={"400"}

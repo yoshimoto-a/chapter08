@@ -14,12 +14,13 @@ export const POST = async (req: Request) => {
   if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const body = await req.json();
-    const { title, content, categoryIds, thumbnailUrl } = body;
+    console.log(body);
+    const { title, content, categoryIds, thumbnailImageKey } = body;
     const post = await prisma.post.create({
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 

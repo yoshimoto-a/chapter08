@@ -25,47 +25,40 @@ const Post: React.FC = () => {
   if (!data || data.length === 0) return <div>記事がありません</div>;
 
   return (
-    <>
-      <div className="px-4 mt-4">
-        <Link href={"/admin/posts"} className="text-blue-500 hover:underline">
-          管理画面
-        </Link>
-      </div>
-      <div className="mx-auto max-w-screen-lg px-4 my-10">
-        <ul>
-          {data.map(item => (
-            <li className="flex flex-col list-none m-0 p-0" key={item.id}>
-              <Link
-                href={`/post/${item.id}`}
-                className="text-gray-700 no-underline"
-              >
-                <div className="border border-gray-300 flex flex-row mb-8 p-4">
-                  <div>
-                    <div className="flex justify-between">
-                      <div className="text-gray-500 text-sm">
-                        {dayjs(item.createdAt).format("YYYY/MM/DD")}
-                      </div>
-                      <div className="flex flex-wrap">
-                        <Categories
-                          categories={item.postCategories.map(
-                            category => category.category
-                          )}
-                        ></Categories>
-                      </div>
+    <div className="mx-auto max-w-screen-lg px-4 my-10">
+      <ul>
+        {data.map(item => (
+          <li className="flex flex-col list-none m-0 p-0" key={item.id}>
+            <Link
+              href={`/post/${item.id}`}
+              className="text-gray-700 no-underline"
+            >
+              <div className="border border-gray-300 flex flex-row mb-8 p-4">
+                <div>
+                  <div className="flex justify-between">
+                    <div className="text-gray-500 text-sm">
+                      {dayjs(item.createdAt).format("YYYY/MM/DD")}
                     </div>
-                    <p className="text-xl mb-4 mt-2">{item.title}</p>
-                    <div
-                      className="text-base leading-relaxed line-clamp-2"
-                      dangerouslySetInnerHTML={{ __html: item.content }}
-                    ></div>
+                    <div className="flex flex-wrap">
+                      <Categories
+                        categories={item.postCategories.map(
+                          category => category.category
+                        )}
+                      ></Categories>
+                    </div>
                   </div>
+                  <p className="text-xl mb-4 mt-2">{item.title}</p>
+                  <div
+                    className="text-base leading-relaxed line-clamp-2"
+                    dangerouslySetInnerHTML={{ __html: item.content }}
+                  ></div>
                 </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };
 export default Post;

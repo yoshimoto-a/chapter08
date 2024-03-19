@@ -2,7 +2,7 @@
 "use client";
 import { useNewPost } from "./_hooks/useNewPost";
 import { Category } from "@/app/_types/Post";
-import React, { ChangeEvent, ChangeEventHandler } from "react";
+import React, { ChangeEvent } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase";
@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 
 const NewPost: React.FC = () => {
-  const url = "/api/admin/posts/new";
+  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const {
     register,
     handleSubmit,
@@ -18,13 +18,12 @@ const NewPost: React.FC = () => {
     watch,
     setValue,
     formState: { isSubmitting },
-  } = useNewPost(url);
+  } = useNewPost(thumbnailImageKey);
 
   const categoriesUrl = "/api/admin/categories";
   const { token } = useSupabaseSession();
   const [data, setData] = useState<any>();
   const [isLoading, setLoading] = useState(true);
-  const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const [thumbnailImageUrl, setThumbnailImageUrl] = useState<null | string>(
     null
   );
@@ -81,7 +80,6 @@ const NewPost: React.FC = () => {
       setValue("categories", [...watch("categories"), category as Category]);
     }
   };
-
   const handleImageChange = async (
     event: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
@@ -89,11 +87,8 @@ const NewPost: React.FC = () => {
       // 画像が選択されていないのでreturn
       return;
     }
-
     const file = event.target.files[0]; // 選択された画像を取得
-
     const filePath = `private/${uuidv4()}`; // ファイルパスを指定
-
     // Supabaseに画像をアップロード
     const { data, error } = await supabase.storage
       .from("post_thumbnail") // ここでバケット名を指定
@@ -101,13 +96,11 @@ const NewPost: React.FC = () => {
         cacheControl: "3600",
         upsert: false,
       });
-
     // アップロードに失敗したらエラーを表示して終了
     if (error) {
       alert(error.message);
       return;
     }
-
     // data.pathに、画像固有のkeyが入っているので、thumbnailImageKeyに格納する
     setThumbnailImageKey(data.path);
   };
@@ -142,7 +135,7 @@ const NewPost: React.FC = () => {
         <div className="w-full">
           <input
             type="file"
-            id="thumbnailUrl"
+            id="thumbnailImageKey"
             className="pt-4 w-full mb-4"
             accept="image/*"
             onChange={handleImageChange}
