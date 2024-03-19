@@ -162,7 +162,7 @@ const PutPost: React.FC = () => {
           id: parseInt(id),
           title: data.title,
           content: data.content,
-          thumbnailImageKey: data.thumbnailImageKey,
+          thumbnailImageKey: thumbnailImageKey,
           categoryIds: data.categories.map(item => item.id),
         }),
       };
