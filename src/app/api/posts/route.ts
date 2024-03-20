@@ -1,9 +1,8 @@
 /*記事一覧取得API */
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { buildPrisma } from "@/_utils/prisma";
 
 export const GET = async () => {
+  const prisma = await buildPrisma();
   try {
     const getPosts = await prisma.post.findMany({
       include: {

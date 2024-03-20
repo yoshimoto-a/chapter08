@@ -1,11 +1,10 @@
 /*管理者カテゴリー新規作成API */
 /*管理者カテゴリー一覧取得API */
-import { PrismaClient } from "@prisma/client";
-import { supabase } from "@/utils/supabase";
-
-const prisma = new PrismaClient();
+import { supabase } from "@/_utils/supabase";
+import { buildPrisma } from "@/_utils/prisma";
 
 export const POST = async (req: Request) => {
+  const prisma = await buildPrisma();
   const token = req.headers.get("Authorization") ?? "";
   // supabaseに対してtokenを送る
   const { error } = await supabase.auth.getUser(token);
@@ -37,6 +36,7 @@ export const POST = async (req: Request) => {
 };
 
 export const GET = async (req: Request) => {
+  const prisma = await buildPrisma();
   const token = req.headers.get("Authorization") ?? "";
   // supabaseに対してtokenを送る
   const { error } = await supabase.auth.getUser(token);

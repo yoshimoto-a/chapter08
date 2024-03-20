@@ -5,7 +5,7 @@ import { Category } from "@/app/_types/Post";
 import React, { ChangeEvent } from "react";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import { useState, useEffect } from "react";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/_utils/supabase";
 import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
 

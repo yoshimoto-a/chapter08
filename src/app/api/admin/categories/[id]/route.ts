@@ -1,16 +1,15 @@
 /*管理者記事詳細取得API */
 /*管理者記事詳細更新API */
 /*管理者記事詳細削除API */
-import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/utils/supabase";
-
-const prisma = new PrismaClient();
+import { supabase } from "@/_utils/supabase";
+import { buildPrisma } from "@/_utils/prisma";
 
 export const GET = async (
   req: NextRequest,
   { params }: { params: { id: string } }
 ) => {
+  const prisma = await buildPrisma();
   const token = req.headers.get("Authorization") ?? "";
   // supabaseに対してtokenを送る
   const { error } = await supabase.auth.getUser(token);
@@ -32,6 +31,7 @@ export const GET = async (
 };
 
 export const PUT = async (req: Request) => {
+  const prisma = await buildPrisma();
   const token = req.headers.get("Authorization") ?? "";
   // supabaseに対してtokenを送る
   const { error } = await supabase.auth.getUser(token);
@@ -54,6 +54,7 @@ export const PUT = async (req: Request) => {
 };
 
 export const DELETE = async (req: Request) => {
+  const prisma = await buildPrisma();
   const token = req.headers.get("Authorization") ?? "";
   // supabaseに対してtokenを送る
   const { error } = await supabase.auth.getUser(token);

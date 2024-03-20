@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import Image from "next/image";
 import type { Post } from "@/app/_types/Post";
 import { Categories } from "@/app/_components/Categories";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/_utils/supabase";
 
 const PostItem: React.FC = () => {
   const { id } = useParams();

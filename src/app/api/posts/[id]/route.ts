@@ -1,12 +1,12 @@
 /*記事詳細取得API*/
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient()
+import { buildPrisma } from "@/_utils/prisma";
 
 export const GET = async (
   request: Request,
-  { params }: { params: { id: string } },) => {
-  try{
+  { params }: { params: { id: string } }
+) => {
+  const prisma = await buildPrisma();
+  try {
     const { id } = params;
     const postId = parseInt(id);
     const getPost = await prisma.post.findUnique({
@@ -26,10 +26,10 @@ export const GET = async (
         },
       },
     });
-    return Response.json({ status:200, post: getPost })
-  }catch(e) {
-    if(e instanceof Error){
-      return Response.json({ status:400, message: e.message })
-    }  
+    return Response.json({ status: 200, post: getPost });
+  } catch (e) {
+    if (e instanceof Error) {
+      return Response.json({ status: 400, message: e.message });
+    }
   }
-}
+};

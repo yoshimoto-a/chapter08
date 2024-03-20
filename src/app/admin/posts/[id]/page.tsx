@@ -10,7 +10,7 @@ import { Post, PostCategory } from "@prisma/client";
 import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/_utils/supabase";
 
 interface Inputs {
   title: string;
