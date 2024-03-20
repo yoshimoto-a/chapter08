@@ -1,14 +1,33 @@
 /*管理者記事一覧ページ */
 "use client";
 import Link from "next/link";
-import { useApi } from "@/app/_hooks/useApi";
 import dayjs from "dayjs";
 import type { Post } from "@prisma/client";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
+import { useState, useEffect } from "react";
 
 const AdminPost: React.FC = () => {
-  const url = "/api/admin/posts";
-  const { data, isLoading } = useApi(url, { method: "GET" });
+  const { token } = useSupabaseSession();
+  const [data, setData] = useState<any>();
+  const [isLoading, setLoading] = useState(true);
+  useEffect(() => {
+    if (!token) return;
 
+    const fetcher = async () => {
+      const resp = await fetch("/api/admin/posts", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+      });
+      const data = await resp.json();
+      setData(data);
+      setLoading(false);
+    };
+    fetcher();
+  }, [token]);
+  console.log(data);
   if (isLoading) return <div>読み込み中...</div>;
   if (!data.posts || data.posts.length === 0)
     return <div>記事がありません</div>;

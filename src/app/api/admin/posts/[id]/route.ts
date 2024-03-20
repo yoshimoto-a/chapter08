@@ -1,13 +1,20 @@
 /*管理者記事詳細取得API */
 /*管理者記事詳細更新API */
 /*管理者記事詳細削除API */
-import { PrismaClient } from "@prisma/client";
+import { supabase } from "@/_utils/supabase";
+import { buildPrisma } from "@/_utils/prisma";
 
-const prisma = new PrismaClient();
 export const GET = async (
   req: Request,
   { params }: { params: { id: string } }
 ) => {
+  const prisma = await buildPrisma();
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const { id } = params;
     const getPost = await prisma.post.findUnique({
@@ -28,22 +35,28 @@ export const GET = async (
     return Response.json({ status: 200, post: getPost });
   } catch (e) {
     if (e instanceof Error) {
-      console.log(e.message);
       return Response.json({ status: 400, e });
     }
   }
 };
 
 export const PUT = async (req: Request) => {
+  const prisma = await buildPrisma();
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   const body = await req.json();
-  const { id, title, content, categoryIds, thumbnailUrl } = body;
+  const { id, title, content, categoryIds, thumbnailImageKey } = body;
   try {
     const post = await prisma.post.update({
       where: { id },
       data: {
         title,
         content,
-        thumbnailUrl,
+        thumbnailImageKey,
       },
     });
 
@@ -73,6 +86,13 @@ export const PUT = async (req: Request) => {
 };
 
 export const DELETE = async (req: Request) => {
+  const prisma = await buildPrisma();
+  const token = req.headers.get("Authorization") ?? "";
+  // supabaseに対してtokenを送る
+  const { error } = await supabase.auth.getUser(token);
+
+  // 送ったtokenが正しくない場合、errorが返却されるので、クライアントにもエラーを返す
+  if (error) return Response.json({ status: error.message }, { status: 400 });
   try {
     const { id } = await req.json();
     const deletePost = await prisma.post.delete({

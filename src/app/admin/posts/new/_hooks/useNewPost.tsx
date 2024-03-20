@@ -2,15 +2,17 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Category } from "@/app/_types/Post";
 import { useRouter } from "next/navigation";
+import { useSupabaseSession } from "@/app/_hooks/useSupabaseSession";
 
-export const useNewPost = (url: string) => {
+export const useNewPost = (thumbnailImageKey: string) => {
   interface Inputs {
     title: string;
     content: string;
-    thumbnailUrl: string;
+    thumbnailImageKey: string;
     categories: Category[];
   }
   const router = useRouter();
+  const { token } = useSupabaseSession();
   const {
     register,
     handleSubmit,
@@ -21,7 +23,7 @@ export const useNewPost = (url: string) => {
     defaultValues: {
       title: "",
       content: "",
-      thumbnailUrl: "https://placehold.jp/800x400.png",
+      thumbnailImageKey: "",
       categories: [],
     },
   });
@@ -32,13 +34,18 @@ export const useNewPost = (url: string) => {
 
   const onSubmit: SubmitHandler<Inputs> = async data => {
     const categoryIds = data.categories.map(item => item.id);
+    if (!token) return;
 
     const prams = {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
       body: JSON.stringify({
         title: data.title,
         content: data.content,
-        thumbnailUrl: data.thumbnailUrl,
+        thumbnailImageKey: thumbnailImageKey,
         categoryIds,
       }),
     };
@@ -54,6 +61,7 @@ export const useNewPost = (url: string) => {
       }
     } catch (e) {
       if (e instanceof Error) {
+        console.log(e);
         window.alert("登録に失敗しました");
       }
     }
