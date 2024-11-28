@@ -1,6 +1,5 @@
 /*記事一覧ページ*/
 "use client";
-
 import "./globals.css";
 import { Categories } from "@/app/_components/Categories";
 import dayjs from "dayjs";

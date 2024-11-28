@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/_utils/supabase";
 import { v4 as uuidv4 } from "uuid";
 import Image from "next/image";
-
 const NewPost: React.FC = () => {
   const [thumbnailImageKey, setThumbnailImageKey] = useState("");
   const {
